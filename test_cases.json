@@ -864,6 +864,17 @@
       }
     },
     {
+      "id": "anthropic.web_search",
+      "model": "claude-sonnet-4-5",
+      "prompt": "What was one positive news story from today? Reply in one sentence.",
+      "max_tokens": 1024,
+      "builtin_tools": [
+        {
+          "name": "web_search"
+        }
+      ]
+    },
+    {
       "id": "anthropic.container",
       "model": "claude-sonnet-4-5",
       "prompt": "Use the code_execution tool to calculate 2 + 2 and report the result.",

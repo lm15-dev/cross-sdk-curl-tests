@@ -43,7 +43,10 @@ OPENAI_BUILTIN_REVERSE = {
     "computer_use_preview": "computer_use",
 }
 GEMINI_BUILTIN_KEYS = {"googleSearch": "web_search", "codeExecution": "code_execution"}
-ANTHROPIC_BUILTIN_TYPES = {"code_execution_20250522": "code_execution"}
+ANTHROPIC_BUILTIN_TYPES = {
+    "web_search_20250305": "web_search",
+    "code_execution_20250522": "code_execution",
+}
 
 
 # ── OpenAI ────────────────────────────────────────────────────────────────
