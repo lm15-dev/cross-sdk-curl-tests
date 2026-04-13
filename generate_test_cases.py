@@ -34,6 +34,17 @@ ANTHROPIC_NATIVE = {"model", "messages", "stream", "system", "temperature",
                      "max_tokens", "tools"}
 GEMINI_NATIVE = {"contents", "systemInstruction", "tools"}
 
+# Reverse maps: provider wire type → canonical builtin name
+OPENAI_BUILTIN_REVERSE = {
+    "web_search_preview": "web_search", "web_search": "web_search",
+    "web_search_2025_08_26": "web_search",
+    "code_interpreter": "code_execution",
+    "file_search": "file_search",
+    "computer_use_preview": "computer_use",
+}
+GEMINI_BUILTIN_KEYS = {"googleSearch": "web_search", "codeExecution": "code_execution"}
+ANTHROPIC_BUILTIN_TYPES = {"code_execution_20250522": "code_execution"}
+
 
 # ── OpenAI ────────────────────────────────────────────────────────────────
 
@@ -143,11 +154,24 @@ def extract_openai(fixture: dict) -> dict:
     if body.get("max_output_tokens") is not None:
         case["max_tokens"] = body["max_output_tokens"]
 
-    tools = [t for t in body.get("tools", []) if t.get("type") == "function"]
-    if tools:
+    func_tools = [t for t in body.get("tools", []) if t.get("type") == "function"]
+    if func_tools:
         case["tools"] = [{"name": t["name"], "description": t.get("description"),
                           "parameters": t.get("parameters", {"type": "object", "properties": {}})}
-                         for t in tools]
+                         for t in func_tools]
+
+    builtin_tools = []
+    for t in body.get("tools", []):
+        wire_type = t.get("type", "")
+        canonical = OPENAI_BUILTIN_REVERSE.get(wire_type)
+        if canonical:
+            cfg = {k: v for k, v in t.items() if k != "type"}
+            bt: dict = {"name": canonical}
+            if cfg:
+                bt["builtin_config"] = cfg
+            builtin_tools.append(bt)
+    if builtin_tools:
+        case["builtin_tools"] = builtin_tools
 
     passthrough = {k: v for k, v in body.items() if k not in OPENAI_NATIVE}
     if passthrough:
@@ -237,11 +261,24 @@ def extract_anthropic(fixture: dict) -> dict:
     if body.get("stream"):
         case["stream"] = True
 
-    tools = body.get("tools", [])
-    if tools:
+    func_tools = [t for t in body.get("tools", []) if "input_schema" in t]
+    if func_tools:
         case["tools"] = [{"name": t["name"], "description": t.get("description"),
                           "parameters": t.get("input_schema", {"type": "object", "properties": {}})}
-                         for t in tools]
+                         for t in func_tools]
+
+    builtin_tools = []
+    for t in body.get("tools", []):
+        wire_type = t.get("type", "")
+        canonical = ANTHROPIC_BUILTIN_TYPES.get(wire_type)
+        if canonical:
+            cfg = {k: v for k, v in t.items() if k not in ("type", "name")}
+            bt: dict = {"name": canonical}
+            if cfg:
+                bt["builtin_config"] = cfg
+            builtin_tools.append(bt)
+    if builtin_tools:
+        case["builtin_tools"] = builtin_tools
 
     passthrough = {k: v for k, v in body.items() if k not in ANTHROPIC_NATIVE}
     if passthrough:
@@ -356,12 +393,22 @@ def extract_gemini(fixture: dict) -> dict:
 
     tools_arr = body.get("tools", [])
     func_decls = []
+    builtin_tools = []
     for t in tools_arr:
         for fd in t.get("functionDeclarations", []):
             func_decls.append({"name": fd["name"], "description": fd.get("description"),
                                "parameters": fd.get("parameters", {"type": "object", "properties": {}})})
+        for gemini_key, canonical_name in GEMINI_BUILTIN_KEYS.items():
+            if gemini_key in t:
+                bt: dict = {"name": canonical_name}
+                cfg = t[gemini_key]
+                if cfg:
+                    bt["builtin_config"] = cfg
+                builtin_tools.append(bt)
     if func_decls:
         case["tools"] = func_decls
+    if builtin_tools:
+        case["builtin_tools"] = builtin_tools
 
     gen_cfg = body.get("generationConfig", {})
     if "maxOutputTokens" in gen_cfg:

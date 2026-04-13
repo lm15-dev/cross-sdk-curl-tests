@@ -15,12 +15,20 @@ if (!caseJson) {
 
 const testCase = JSON.parse(caseJson);
 
-const tools = testCase.tools?.map(t => ({
-  type: "function",
-  name: t.name,
-  description: t.description,
-  parameters: t.parameters ?? { type: "object", properties: {} },
-}));
+const tools = [
+  ...(testCase.tools?.map(t => ({
+    type: "function",
+    name: t.name,
+    description: t.description,
+    parameters: t.parameters ?? { type: "object", properties: {} },
+  })) ?? []),
+  ...(testCase.builtin_tools?.map(t => ({
+    type: "builtin",
+    name: t.name,
+    builtin_config: t.builtin_config,
+  })) ?? []),
+] || undefined;
+const finalTools = tools.length ? tools : undefined;
 
 // Build options
 const opts = {
@@ -30,7 +38,7 @@ const opts = {
   topP: testCase.top_p,
   stop: testCase.stop,
   stream: testCase.stream,
-  tools,
+  tools: finalTools,
   apiKey: "test-key",
 };
 

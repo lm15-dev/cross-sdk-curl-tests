@@ -28,6 +28,10 @@ type testCase struct {
 		Description string         `json:"description,omitempty"`
 		Parameters  map[string]any `json:"parameters,omitempty"`
 	} `json:"tools,omitempty"`
+	BuiltinTools []struct {
+		Name          string         `json:"name"`
+		BuiltinConfig map[string]any `json:"builtin_config,omitempty"`
+	} `json:"builtin_tools,omitempty"`
 	Provider map[string]any `json:"provider,omitempty"`
 }
 
@@ -63,6 +67,13 @@ func main() {
 			Name:        t.Name,
 			Description: t.Description,
 			Parameters:  params,
+		})
+	}
+	for _, bt := range tc.BuiltinTools {
+		tools = append(tools, lm15.Tool{
+			Type:          "builtin",
+			Name:          bt.Name,
+			BuiltinConfig: bt.BuiltinConfig,
 		})
 	}
 

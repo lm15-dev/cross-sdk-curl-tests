@@ -339,6 +339,22 @@
       }
     },
     {
+      "id": "openai.max_tool_calls",
+      "model": "gpt-4.1-mini",
+      "prompt": "Use web search to verify which city the Eiffel Tower is in. Answer with just the city name.",
+      "builtin_tools": [
+        {
+          "name": "web_search",
+          "builtin_config": {
+            "search_context_size": "low"
+          }
+        }
+      ],
+      "provider": {
+        "max_tool_calls": 1
+      }
+    },
+    {
       "id": "openai.structured_output",
       "model": "gpt-4.1-mini",
       "prompt": "Return a cookie recipe as JSON.",
@@ -399,6 +415,39 @@
         "reasoning": {
           "effort": "low"
         }
+      }
+    },
+    {
+      "id": "openai.web_search",
+      "model": "gpt-5.4",
+      "prompt": "What was one positive news story from today? Reply in one sentence.",
+      "builtin_tools": [
+        {
+          "name": "web_search",
+          "builtin_config": {
+            "search_context_size": "low"
+          }
+        }
+      ]
+    },
+    {
+      "id": "openai.code_interpreter",
+      "model": "gpt-5.4",
+      "prompt": "Use Python in the code interpreter to compute the SHA256 hash of the exact string 'curl-fixtures-2026-04-13'. Reply with only the lowercase hex digest.",
+      "builtin_tools": [
+        {
+          "name": "code_execution",
+          "builtin_config": {
+            "container": {
+              "type": "auto"
+            }
+          }
+        }
+      ],
+      "provider": {
+        "include": [
+          "code_interpreter_call.outputs"
+        ]
       }
     },
     {
@@ -811,6 +860,24 @@
               "additionalProperties": false
             }
           }
+        }
+      }
+    },
+    {
+      "id": "anthropic.container",
+      "model": "claude-sonnet-4-5",
+      "prompt": "Use the code_execution tool to calculate 2 + 2 and report the result.",
+      "max_tokens": 512,
+      "builtin_tools": [
+        {
+          "name": "code_execution"
+        }
+      ],
+      "provider": {
+        "tool_choice": {
+          "type": "tool",
+          "name": "code_execution",
+          "disable_parallel_tool_use": true
         }
       }
     },
@@ -1254,6 +1321,26 @@
           }
         }
       }
+    },
+    {
+      "id": "gemini.google_search",
+      "model": "gemini-2.5-flash",
+      "prompt": "What was one positive news story from today? Reply in one sentence.",
+      "builtin_tools": [
+        {
+          "name": "web_search"
+        }
+      ]
+    },
+    {
+      "id": "gemini.code_execution",
+      "model": "gemini-2.5-flash",
+      "prompt": "Use code execution to calculate the sum of the first 10 prime numbers. Return only the final number.",
+      "builtin_tools": [
+        {
+          "name": "code_execution"
+        }
+      ]
     }
   ]
 }

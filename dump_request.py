@@ -10,7 +10,7 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "lm15-python"))
 
-from lm15.types import FunctionTool, messages_from_json
+from lm15.types import BuiltinTool, FunctionTool, messages_from_json
 
 
 def main():
@@ -46,6 +46,14 @@ def main():
             )
             for t in case["tools"]
         ]
+
+    if case.get("builtin_tools"):
+        builtin = [
+            BuiltinTool(name=t["name"], builtin_config=t.get("builtin_config"))
+            for t in case["builtin_tools"]
+        ]
+        kwargs.setdefault("tools", [])
+        kwargs["tools"].extend(builtin)
 
     # Determine prompt vs messages
     prompt = case.get("prompt")

@@ -25,16 +25,22 @@ haskey(case, "stop") && (kwargs[:stop] = convert(Vector{String}, case["stop"]))
 haskey(case, "stream") && (kwargs[:stream] = case["stream"])
 haskey(case, "reasoning") && (kwargs[:reasoning] = case["reasoning"])
 
+tools_list = LM15.Tool[]
 if get(case, "tools", nothing) !== nothing
-    kwargs[:tools] = [
-        FunctionTool(
+    for t in case["tools"]
+        push!(tools_list, FunctionTool(
             t["name"],
             get(t, "description", nothing);
             parameters=get(t, "parameters", Dict{String,Any}("type" => "object", "properties" => Dict{String,Any}())),
-        )
-        for t in case["tools"]
-    ]
+        ))
+    end
 end
+if get(case, "builtin_tools", nothing) !== nothing
+    for bt in case["builtin_tools"]
+        push!(tools_list, BuiltinTool(bt["name"]; config=get(bt, "builtin_config", nothing)))
+    end
+end
+!isempty(tools_list) && (kwargs[:tools] = tools_list)
 
 # Handle messages (canonical format)
 if haskey(case, "messages")
