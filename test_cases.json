@@ -1,39 +1,10 @@
 {
-  "description": "Cross-SDK curl test cases. Each case defines a logical lm15 call. All SDKs should produce identical HTTP request bodies (modulo key ordering and auth headers). The 'provider' field is a passthrough dict merged into the provider payload.",
+  "description": "Cross-SDK curl test cases — auto-generated from curl-fixtures. Each case defines logical inputs that all SDKs should produce identical HTTP request bodies for. Regenerate with: python3 cross-sdk-curl-tests/generate_test_cases.py",
   "cases": [
     {
       "id": "openai.basic_text",
       "model": "gpt-4.1-mini",
       "prompt": "Say hello."
-    },
-    {
-      "id": "openai.with_system",
-      "model": "gpt-4.1-mini",
-      "prompt": "Summarize DNA.",
-      "system": "You are terse."
-    },
-    {
-      "id": "openai.with_temperature",
-      "model": "gpt-4.1-mini",
-      "prompt": "Write a haiku.",
-      "temperature": 0.7,
-      "max_tokens": 50
-    },
-    {
-      "id": "openai.with_tools",
-      "model": "gpt-4.1-mini",
-      "prompt": "What is the weather in Montreal?",
-      "tools": [
-        {
-          "name": "get_weather",
-          "description": "Get the current weather for a city",
-          "parameters": {
-            "type": "object",
-            "properties": { "city": {"type": "string"} },
-            "required": ["city"]
-          }
-        }
-      ]
     },
     {
       "id": "openai.streaming",
@@ -42,10 +13,115 @@
       "stream": true
     },
     {
-      "id": "openai.top_p",
+      "id": "openai.system_prompt",
       "model": "gpt-4.1-mini",
-      "prompt": "Write one short slogan about science.",
-      "provider": {"top_p": 0.8}
+      "prompt": "Summarize DNA.",
+      "system": "You are terse."
+    },
+    {
+      "id": "openai.temperature",
+      "model": "gpt-4.1-mini",
+      "prompt": "Write a haiku.",
+      "temperature": 0.7,
+      "max_tokens": 50
+    },
+    {
+      "id": "openai.tools",
+      "model": "gpt-4.1-mini",
+      "prompt": "What is the weather in Montreal?",
+      "tools": [
+        {
+          "name": "get_weather",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "city": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "city"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "openai.image_url",
+      "model": "gpt-4.1-mini",
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "input_text",
+              "text": "Describe this image in a few words."
+            },
+            {
+              "type": "input_image",
+              "image_url": "https://raw.githubusercontent.com/github/explore/main/topics/react/react.png",
+              "detail": "low"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "openai.multi_turn",
+      "model": "gpt-4.1-mini",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is 2 + 2? Reply with one word."
+        },
+        {
+          "role": "assistant",
+          "text": "four"
+        },
+        {
+          "role": "user",
+          "text": "Repeat your previous answer in uppercase."
+        }
+      ]
+    },
+    {
+      "id": "openai.multi_turn_tool_result",
+      "model": "gpt-4.1-mini",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is the weather in Montreal?"
+        },
+        {
+          "type": "function_call",
+          "call_id": "call_weather_montreal",
+          "name": "get_weather",
+          "arguments": "{\"city\":\"Montreal\"}"
+        },
+        {
+          "type": "function_call_output",
+          "call_id": "call_weather_montreal",
+          "output": "Montreal is 12 C and sunny."
+        }
+      ],
+      "tools": [
+        {
+          "name": "get_weather",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "city": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "city"
+            ]
+          }
+        }
+      ]
     },
     {
       "id": "openai.tool_choice_auto",
@@ -57,12 +133,20 @@
           "description": "Get the current weather for a city",
           "parameters": {
             "type": "object",
-            "properties": { "city": {"type": "string"} },
-            "required": ["city"]
+            "properties": {
+              "city": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "city"
+            ]
           }
         }
       ],
-      "provider": {"tool_choice": "auto"}
+      "provider": {
+        "tool_choice": "auto"
+      }
     },
     {
       "id": "openai.tool_choice_required",
@@ -74,12 +158,20 @@
           "description": "Get the current weather for a city",
           "parameters": {
             "type": "object",
-            "properties": { "city": {"type": "string"} },
-            "required": ["city"]
+            "properties": {
+              "city": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "city"
+            ]
           }
         }
       ],
-      "provider": {"tool_choice": "required"}
+      "provider": {
+        "tool_choice": "required"
+      }
     },
     {
       "id": "openai.tool_choice_none",
@@ -91,12 +183,20 @@
           "description": "Get the current weather for a city",
           "parameters": {
             "type": "object",
-            "properties": { "city": {"type": "string"} },
-            "required": ["city"]
+            "properties": {
+              "city": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "city"
+            ]
           }
         }
       ],
-      "provider": {"tool_choice": "none"}
+      "provider": {
+        "tool_choice": "none"
+      }
     },
     {
       "id": "openai.tool_choice_specific",
@@ -108,12 +208,23 @@
           "description": "Get the current weather for a city",
           "parameters": {
             "type": "object",
-            "properties": { "city": {"type": "string"} },
-            "required": ["city"]
+            "properties": {
+              "city": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "city"
+            ]
           }
         }
       ],
-      "provider": {"tool_choice": {"type": "function", "name": "get_weather"}}
+      "provider": {
+        "tool_choice": {
+          "type": "function",
+          "name": "get_weather"
+        }
+      }
     },
     {
       "id": "openai.structured_output",
@@ -128,10 +239,20 @@
             "schema": {
               "type": "object",
               "properties": {
-                "name": {"type": "string"},
-                "ingredients": {"type": "array", "items": {"type": "string"}}
+                "name": {
+                  "type": "string"
+                },
+                "ingredients": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
               },
-              "required": ["name", "ingredients"],
+              "required": [
+                "name",
+                "ingredients"
+              ],
               "additionalProperties": false
             }
           }
@@ -143,41 +264,36 @@
       "model": "gpt-4.1-mini",
       "prompt": "Respond with a JSON object containing keys title and summary about DNA.",
       "provider": {
-        "text": {"format": {"type": "json_object"}}
+        "text": {
+          "format": {
+            "type": "json_object"
+          }
+        }
+      }
+    },
+    {
+      "id": "openai.top_p",
+      "model": "gpt-4.1-mini",
+      "prompt": "Write one short slogan about science.",
+      "provider": {
+        "top_p": 0.8
       }
     },
     {
       "id": "openai.reasoning",
       "model": "gpt-5-mini",
       "prompt": "What is 143 times 27? Reply with just the number.",
-      "provider": {"reasoning": {"effort": "low"}}
+      "provider": {
+        "reasoning": {
+          "effort": "low"
+        }
+      }
     },
     {
       "id": "anthropic.basic_text",
       "model": "claude-sonnet-4-5",
-      "prompt": "Say hello."
-    },
-    {
-      "id": "anthropic.with_system",
-      "model": "claude-sonnet-4-5",
-      "prompt": "Summarize DNA.",
-      "system": "You are terse."
-    },
-    {
-      "id": "anthropic.with_tools",
-      "model": "claude-sonnet-4-5",
-      "prompt": "What is the weather in Montreal?",
-      "tools": [
-        {
-          "name": "get_weather",
-          "description": "Get the current weather for a city",
-          "parameters": {
-            "type": "object",
-            "properties": { "city": {"type": "string"} },
-            "required": ["city"]
-          }
-        }
-      ]
+      "prompt": "Say hello.",
+      "max_tokens": 1024
     },
     {
       "id": "anthropic.streaming",
@@ -187,11 +303,18 @@
       "stream": true
     },
     {
+      "id": "anthropic.system_prompt",
+      "model": "claude-sonnet-4-5",
+      "prompt": "Summarize DNA.",
+      "system": "You are terse.",
+      "max_tokens": 1024
+    },
+    {
       "id": "anthropic.temperature",
       "model": "claude-sonnet-4-5",
       "prompt": "Write one short slogan about science.",
-      "temperature": 0.2,
-      "max_tokens": 256
+      "max_tokens": 256,
+      "temperature": 0.2
     },
     {
       "id": "anthropic.max_tokens",
@@ -200,109 +323,290 @@
       "max_tokens": 100
     },
     {
-      "id": "anthropic.top_p",
+      "id": "anthropic.tools",
       "model": "claude-sonnet-4-5",
-      "prompt": "Write one short slogan about science.",
-      "max_tokens": 256,
-      "provider": {"top_p": 0.8}
+      "prompt": "What is the weather in Montreal?",
+      "max_tokens": 1024,
+      "tools": [
+        {
+          "name": "get_weather",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "city": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "city"
+            ]
+          }
+        }
+      ]
     },
     {
-      "id": "anthropic.top_k",
+      "id": "anthropic.image_url",
       "model": "claude-sonnet-4-5",
-      "prompt": "Name one primary color.",
-      "max_tokens": 32,
-      "provider": {"top_k": 5}
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Describe this image in a few words."
+            },
+            {
+              "type": "image",
+              "source": {
+                "type": "url",
+                "url": "https://github.githubassets.com/favicons/favicon.png"
+              }
+            }
+          ]
+        }
+      ],
+      "max_tokens": 512
+    },
+    {
+      "id": "anthropic.multi_turn",
+      "model": "claude-sonnet-4-5",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is 2 + 2? Reply with one word."
+        },
+        {
+          "role": "assistant",
+          "text": "four"
+        },
+        {
+          "role": "user",
+          "text": "Repeat your previous answer in uppercase."
+        }
+      ],
+      "max_tokens": 32
+    },
+    {
+      "id": "anthropic.multi_turn_tool_result",
+      "model": "claude-sonnet-4-5",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is 2 + 2? Use the calculator tool, then answer in one word."
+        },
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "tool_use",
+              "id": "toolu_calc_2_plus_2",
+              "name": "calculator",
+              "input": {
+                "expression": "2 + 2"
+              }
+            }
+          ]
+        },
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "tool_result",
+              "tool_use_id": "toolu_calc_2_plus_2",
+              "content": "4"
+            }
+          ]
+        }
+      ],
+      "max_tokens": 128,
+      "tools": [
+        {
+          "name": "calculator",
+          "description": "Evaluate a basic arithmetic expression",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "expression": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "expression"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "anthropic.tool_choice_auto",
+      "model": "claude-sonnet-4-5",
+      "prompt": "What is the weather in Montreal?",
+      "max_tokens": 1024,
+      "tools": [
+        {
+          "name": "get_weather",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "city": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "city"
+            ]
+          }
+        }
+      ],
+      "provider": {
+        "tool_choice": {
+          "type": "auto"
+        }
+      }
+    },
+    {
+      "id": "anthropic.tool_choice_any",
+      "model": "claude-sonnet-4-5",
+      "prompt": "What is the weather in Montreal? Use the tool.",
+      "max_tokens": 1024,
+      "tools": [
+        {
+          "name": "get_weather",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "city": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "city"
+            ]
+          }
+        }
+      ],
+      "provider": {
+        "tool_choice": {
+          "type": "any",
+          "disable_parallel_tool_use": true
+        }
+      }
+    },
+    {
+      "id": "anthropic.tool_choice_specific",
+      "model": "claude-sonnet-4-5",
+      "prompt": "Get the weather in Montreal.",
+      "max_tokens": 1024,
+      "tools": [
+        {
+          "name": "get_weather",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "city": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "city"
+            ]
+          }
+        }
+      ],
+      "provider": {
+        "tool_choice": {
+          "type": "tool",
+          "name": "get_weather",
+          "disable_parallel_tool_use": true
+        }
+      }
+    },
+    {
+      "id": "anthropic.tool_choice_none",
+      "model": "claude-sonnet-4-5",
+      "prompt": "Say hello without using any tool.",
+      "max_tokens": 1024,
+      "tools": [
+        {
+          "name": "get_weather",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "city": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "city"
+            ]
+          }
+        }
+      ],
+      "provider": {
+        "tool_choice": {
+          "type": "none"
+        }
+      }
     },
     {
       "id": "anthropic.stop_sequences",
       "model": "claude-sonnet-4-5",
       "prompt": "Count upward from 1 using digits separated by commas and no spaces.",
       "max_tokens": 32,
-      "provider": {"stop_sequences": ["4"]}
+      "provider": {
+        "stop_sequences": [
+          "4"
+        ]
+      }
     },
     {
-      "id": "anthropic.tool_choice_auto",
+      "id": "anthropic.top_p",
       "model": "claude-sonnet-4-5",
-      "prompt": "What is the weather in Montreal?",
-      "tools": [
-        {
-          "name": "get_weather",
-          "description": "Get the current weather for a city",
-          "parameters": {
-            "type": "object",
-            "properties": { "city": {"type": "string"} },
-            "required": ["city"]
-          }
-        }
-      ],
-      "provider": {"tool_choice": {"type": "auto"}}
+      "prompt": "Write one short slogan about science.",
+      "max_tokens": 256,
+      "provider": {
+        "top_p": 0.8
+      }
     },
     {
-      "id": "anthropic.tool_choice_any",
+      "id": "anthropic.top_k",
       "model": "claude-sonnet-4-5",
-      "prompt": "What is the weather in Montreal? Use the tool.",
-      "tools": [
-        {
-          "name": "get_weather",
-          "description": "Get the current weather for a city",
-          "parameters": {
-            "type": "object",
-            "properties": { "city": {"type": "string"} },
-            "required": ["city"]
-          }
-        }
-      ],
-      "provider": {"tool_choice": {"type": "any", "disable_parallel_tool_use": true}}
-    },
-    {
-      "id": "anthropic.tool_choice_specific",
-      "model": "claude-sonnet-4-5",
-      "prompt": "Get the weather in Montreal.",
-      "tools": [
-        {
-          "name": "get_weather",
-          "description": "Get the current weather for a city",
-          "parameters": {
-            "type": "object",
-            "properties": { "city": {"type": "string"} },
-            "required": ["city"]
-          }
-        }
-      ],
-      "provider": {"tool_choice": {"type": "tool", "name": "get_weather", "disable_parallel_tool_use": true}}
-    },
-    {
-      "id": "anthropic.tool_choice_none",
-      "model": "claude-sonnet-4-5",
-      "prompt": "Say hello without using any tool.",
-      "tools": [
-        {
-          "name": "get_weather",
-          "description": "Get the current weather for a city",
-          "parameters": {
-            "type": "object",
-            "properties": { "city": {"type": "string"} },
-            "required": ["city"]
-          }
-        }
-      ],
-      "provider": {"tool_choice": {"type": "none"}}
+      "prompt": "Name one primary color.",
+      "max_tokens": 32,
+      "provider": {
+        "top_k": 5
+      }
     },
     {
       "id": "anthropic.thinking",
       "model": "claude-sonnet-4-5",
       "prompt": "What is 143 times 27? Think carefully.",
       "max_tokens": 1400,
-      "reasoning": {"enabled": true, "budget": 1024},
-      "provider": {"thinking": {"type": "enabled", "budget_tokens": 1024, "display": "summarized"}}
+      "provider": {
+        "thinking": {
+          "type": "enabled",
+          "budget_tokens": 1024,
+          "display": "summarized"
+        }
+      }
     },
     {
       "id": "anthropic.thinking_budget",
       "model": "claude-sonnet-4-5",
       "prompt": "What is 143 times 27? Think carefully.",
       "max_tokens": 1400,
-      "reasoning": {"enabled": true, "budget": 1024},
-      "provider": {"thinking": {"type": "enabled", "budget_tokens": 1024, "display": "summarized"}}
+      "provider": {
+        "thinking": {
+          "type": "enabled",
+          "budget_tokens": 1024,
+          "display": "summarized"
+        }
+      }
     },
     {
       "id": "anthropic.output_config",
@@ -315,8 +619,14 @@
             "type": "json_schema",
             "schema": {
               "type": "object",
-              "properties": {"animal": {"type": "string"}},
-              "required": ["animal"],
+              "properties": {
+                "animal": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "animal"
+              ],
               "additionalProperties": false
             }
           }
@@ -329,13 +639,19 @@
       "prompt": "Say hello."
     },
     {
-      "id": "gemini.with_system",
+      "id": "gemini.streaming",
+      "model": "gemini-2.5-flash",
+      "prompt": "Hello.",
+      "stream": true
+    },
+    {
+      "id": "gemini.system_prompt",
       "model": "gemini-2.5-flash",
       "prompt": "Summarize DNA.",
       "system": "You are terse."
     },
     {
-      "id": "gemini.with_tools",
+      "id": "gemini.tools",
       "model": "gemini-2.5-flash",
       "prompt": "What is the weather in Montreal?",
       "tools": [
@@ -344,23 +660,121 @@
           "description": "Get the current weather for a city",
           "parameters": {
             "type": "object",
-            "properties": { "city": {"type": "string"} },
-            "required": ["city"]
+            "properties": {
+              "city": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "city"
+            ]
           }
         }
       ]
     },
     {
-      "id": "gemini.streaming",
+      "id": "gemini.image_inline",
       "model": "gemini-2.5-flash",
-      "prompt": "Hello.",
-      "stream": true
+      "messages": [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "text": "Describe this image in a few words. It is a website icon."
+            },
+            {
+              "inline_data": {
+                "mime_type": "image/png",
+                "data": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAQklEQVR4nGP8//8/Ay0BE01NH7Vg1AKqABacMoyMJBuGLUsN/SAatWDUglELRi0YtYAaAHeFQ6UG2dAPolELBt4CAIoVBz94d1SyAAAAAElFTkSuQmCC"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gemini.multi_turn",
+      "model": "gemini-2.5-flash",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is 2 + 2? Reply with one word."
+        },
+        {
+          "role": "assistant",
+          "text": "four"
+        },
+        {
+          "role": "user",
+          "text": "Repeat your previous answer in uppercase. Reply with one word."
+        }
+      ]
+    },
+    {
+      "id": "gemini.multi_turn_function_response",
+      "model": "gemini-2.5-flash",
+      "messages": [
+        {
+          "role": "user",
+          "text": "What is 2 + 2? Use the calculator tool, then answer in one word."
+        },
+        {
+          "role": "assistant",
+          "parts": [
+            {
+              "functionCall": {
+                "id": "call_calc_2_plus_2",
+                "name": "calculator",
+                "args": {
+                  "expression": "2 + 2"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "role": "user",
+          "parts": [
+            {
+              "functionResponse": {
+                "id": "call_calc_2_plus_2",
+                "name": "calculator",
+                "response": {
+                  "result": "4"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "tools": [
+        {
+          "name": "calculator",
+          "description": "Evaluate a basic arithmetic expression",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "expression": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "expression"
+            ]
+          }
+        }
+      ]
     },
     {
       "id": "gemini.temperature",
       "model": "gemini-2.5-flash",
       "prompt": "Write one short slogan about science.",
-      "provider": {"generationConfig": {"temperature": 1.0, "topP": 0.8}}
+      "provider": {
+        "generationConfig": {
+          "temperature": 1.0,
+          "topP": 0.8
+        }
+      }
     },
     {
       "id": "gemini.max_output_tokens",
@@ -372,25 +786,39 @@
       "id": "gemini.top_p",
       "model": "gemini-2.5-flash",
       "prompt": "Write one short slogan about science.",
-      "provider": {"generationConfig": {"topP": 0.8}}
+      "provider": {
+        "generationConfig": {
+          "topP": 0.8
+        }
+      }
     },
     {
       "id": "gemini.top_k",
       "model": "gemini-2.5-flash",
       "prompt": "Write one short slogan about science.",
-      "provider": {"generationConfig": {"topK": 10}}
+      "provider": {
+        "generationConfig": {
+          "topK": 10
+        }
+      }
     },
     {
       "id": "gemini.stop_sequences",
       "model": "gemini-2.5-flash",
       "prompt": "Repeat exactly: alpha STOP beta",
-      "stop": ["STOP"]
+      "stop": [
+        "STOP"
+      ]
     },
     {
       "id": "gemini.response_mime_type",
       "model": "gemini-2.5-flash",
       "prompt": "Respond with a JSON object containing keys title and summary about DNA.",
-      "provider": {"generationConfig": {"responseMimeType": "application/json"}}
+      "provider": {
+        "generationConfig": {
+          "responseMimeType": "application/json"
+        }
+      }
     },
     {
       "id": "gemini.response_schema",
@@ -404,10 +832,20 @@
             "items": {
               "type": "object",
               "properties": {
-                "recipeName": {"type": "string"},
-                "ingredients": {"type": "array", "items": {"type": "string"}}
+                "recipeName": {
+                  "type": "string"
+                },
+                "ingredients": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
               },
-              "required": ["recipeName", "ingredients"]
+              "required": [
+                "recipeName",
+                "ingredients"
+              ]
             }
           }
         }
@@ -417,7 +855,14 @@
       "id": "gemini.thinking",
       "model": "gemini-2.5-flash",
       "prompt": "What is 143 times 27? Think carefully.",
-      "provider": {"generationConfig": {"thinkingConfig": {"includeThoughts": true, "thinkingBudget": 256}}}
+      "provider": {
+        "generationConfig": {
+          "thinkingConfig": {
+            "includeThoughts": true,
+            "thinkingBudget": 256
+          }
+        }
+      }
     },
     {
       "id": "gemini.tool_config_auto",
@@ -429,12 +874,28 @@
           "description": "Multiply two numbers",
           "parameters": {
             "type": "object",
-            "properties": { "a": {"type": "number"}, "b": {"type": "number"} },
-            "required": ["a", "b"]
+            "properties": {
+              "a": {
+                "type": "number"
+              },
+              "b": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "a",
+              "b"
+            ]
           }
         }
       ],
-      "provider": {"toolConfig": {"functionCallingConfig": {"mode": "AUTO"}}}
+      "provider": {
+        "toolConfig": {
+          "functionCallingConfig": {
+            "mode": "AUTO"
+          }
+        }
+      }
     },
     {
       "id": "gemini.tool_config_any",
@@ -446,12 +907,28 @@
           "description": "Multiply two numbers",
           "parameters": {
             "type": "object",
-            "properties": { "a": {"type": "number"}, "b": {"type": "number"} },
-            "required": ["a", "b"]
+            "properties": {
+              "a": {
+                "type": "number"
+              },
+              "b": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "a",
+              "b"
+            ]
           }
         }
       ],
-      "provider": {"toolConfig": {"functionCallingConfig": {"mode": "ANY"}}}
+      "provider": {
+        "toolConfig": {
+          "functionCallingConfig": {
+            "mode": "ANY"
+          }
+        }
+      }
     },
     {
       "id": "gemini.tool_config_none",
@@ -463,12 +940,28 @@
           "description": "Multiply two numbers",
           "parameters": {
             "type": "object",
-            "properties": { "a": {"type": "number"}, "b": {"type": "number"} },
-            "required": ["a", "b"]
+            "properties": {
+              "a": {
+                "type": "number"
+              },
+              "b": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "a",
+              "b"
+            ]
           }
         }
       ],
-      "provider": {"toolConfig": {"functionCallingConfig": {"mode": "NONE"}}}
+      "provider": {
+        "toolConfig": {
+          "functionCallingConfig": {
+            "mode": "NONE"
+          }
+        }
+      }
     }
   ]
 }
