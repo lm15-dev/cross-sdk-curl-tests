@@ -310,6 +310,35 @@
       }
     },
     {
+      "id": "openai.parallel_tool_calls",
+      "model": "gpt-4.1-mini",
+      "prompt": "Call both get_temperature_montreal and get_humidity_montreal now. Do not answer with plain text.",
+      "tools": [
+        {
+          "name": "get_temperature_montreal",
+          "description": "Get the current temperature in Montreal",
+          "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        },
+        {
+          "name": "get_humidity_montreal",
+          "description": "Get the current humidity in Montreal",
+          "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      ],
+      "provider": {
+        "tool_choice": "required",
+        "parallel_tool_calls": true
+      }
+    },
+    {
       "id": "openai.structured_output",
       "model": "gpt-4.1-mini",
       "prompt": "Return a cookie recipe as JSON.",
