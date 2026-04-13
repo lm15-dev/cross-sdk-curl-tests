@@ -1,5 +1,5 @@
 {
-  "description": "Cross-SDK curl test cases — auto-generated from curl-fixtures. Each case defines logical inputs that all SDKs should produce identical HTTP request bodies for. Regenerate with: python3 cross-sdk-curl-tests/generate_test_cases.py",
+  "description": "Cross-SDK curl test cases — auto-generated from curl-fixtures. Uses the canonical lm15 message format for the 'messages' field. Regenerate: python3 cross-sdk-curl-tests/generate_test_cases.py",
   "cases": [
     {
       "id": "openai.basic_text",
@@ -53,15 +53,19 @@
       "messages": [
         {
           "role": "user",
-          "content": [
+          "parts": [
             {
-              "type": "input_text",
+              "type": "text",
               "text": "Describe this image in a few words."
             },
             {
-              "type": "input_image",
-              "image_url": "https://raw.githubusercontent.com/github/explore/main/topics/react/react.png",
-              "detail": "low"
+              "type": "image",
+              "source": {
+                "type": "url",
+                "url": "https://raw.githubusercontent.com/github/explore/main/topics/react/react.png",
+                "media_type": "image/png",
+                "detail": "low"
+              }
             }
           ]
         }
@@ -73,15 +77,30 @@
       "messages": [
         {
           "role": "user",
-          "text": "What is 2 + 2? Reply with one word."
+          "parts": [
+            {
+              "type": "text",
+              "text": "What is 2 + 2? Reply with one word."
+            }
+          ]
         },
         {
           "role": "assistant",
-          "text": "four"
+          "parts": [
+            {
+              "type": "text",
+              "text": "four"
+            }
+          ]
         },
         {
           "role": "user",
-          "text": "Repeat your previous answer in uppercase."
+          "parts": [
+            {
+              "type": "text",
+              "text": "Repeat your previous answer in uppercase."
+            }
+          ]
         }
       ]
     },
@@ -91,18 +110,35 @@
       "messages": [
         {
           "role": "user",
-          "text": "What is the weather in Montreal?"
+          "parts": [
+            {
+              "type": "text",
+              "text": "What is the weather in Montreal?"
+            }
+          ]
         },
         {
-          "type": "function_call",
-          "call_id": "call_weather_montreal",
-          "name": "get_weather",
-          "arguments": "{\"city\":\"Montreal\"}"
+          "role": "assistant",
+          "parts": [
+            {
+              "type": "tool_call",
+              "id": "call_weather_montreal",
+              "name": "get_weather",
+              "arguments": {
+                "city": "Montreal"
+              }
+            }
+          ]
         },
         {
-          "type": "function_call_output",
-          "call_id": "call_weather_montreal",
-          "output": "Montreal is 12 C and sunny."
+          "role": "tool",
+          "parts": [
+            {
+              "type": "tool_result",
+              "id": "call_weather_montreal",
+              "content": "Montreal is 12 C and sunny."
+            }
+          ]
         }
       ],
       "tools": [
@@ -351,7 +387,7 @@
       "messages": [
         {
           "role": "user",
-          "content": [
+          "parts": [
             {
               "type": "text",
               "text": "Describe this image in a few words."
@@ -360,6 +396,7 @@
               "type": "image",
               "source": {
                 "type": "url",
+                "media_type": "image/png",
                 "url": "https://github.githubassets.com/favicons/favicon.png"
               }
             }
@@ -374,15 +411,30 @@
       "messages": [
         {
           "role": "user",
-          "text": "What is 2 + 2? Reply with one word."
+          "parts": [
+            {
+              "type": "text",
+              "text": "What is 2 + 2? Reply with one word."
+            }
+          ]
         },
         {
           "role": "assistant",
-          "text": "four"
+          "parts": [
+            {
+              "type": "text",
+              "text": "four"
+            }
+          ]
         },
         {
           "role": "user",
-          "text": "Repeat your previous answer in uppercase."
+          "parts": [
+            {
+              "type": "text",
+              "text": "Repeat your previous answer in uppercase."
+            }
+          ]
         }
       ],
       "max_tokens": 32
@@ -393,27 +445,32 @@
       "messages": [
         {
           "role": "user",
-          "text": "What is 2 + 2? Use the calculator tool, then answer in one word."
+          "parts": [
+            {
+              "type": "text",
+              "text": "What is 2 + 2? Use the calculator tool, then answer in one word."
+            }
+          ]
         },
         {
           "role": "assistant",
-          "content": [
+          "parts": [
             {
-              "type": "tool_use",
+              "type": "tool_call",
               "id": "toolu_calc_2_plus_2",
               "name": "calculator",
-              "input": {
+              "arguments": {
                 "expression": "2 + 2"
               }
             }
           ]
         },
         {
-          "role": "user",
-          "content": [
+          "role": "tool",
+          "parts": [
             {
               "type": "tool_result",
-              "tool_use_id": "toolu_calc_2_plus_2",
+              "id": "toolu_calc_2_plus_2",
               "content": "4"
             }
           ]
@@ -680,12 +737,15 @@
           "role": "user",
           "parts": [
             {
+              "type": "text",
               "text": "Describe this image in a few words. It is a website icon."
             },
             {
-              "inline_data": {
-                "mime_type": "image/png",
-                "data": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAQklEQVR4nGP8//8/Ay0BE01NH7Vg1AKqABacMoyMJBuGLUsN/SAatWDUglELRi0YtYAaAHeFQ6UG2dAPolELBt4CAIoVBz94d1SyAAAAAElFTkSuQmCC"
+              "type": "image",
+              "source": {
+                "type": "base64",
+                "data": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAQklEQVR4nGP8//8/Ay0BE01NH7Vg1AKqABacMoyMJBuGLUsN/SAatWDUglELRi0YtYAaAHeFQ6UG2dAPolELBt4CAIoVBz94d1SyAAAAAElFTkSuQmCC",
+                "media_type": "image/png"
               }
             }
           ]
@@ -698,15 +758,30 @@
       "messages": [
         {
           "role": "user",
-          "text": "What is 2 + 2? Reply with one word."
+          "parts": [
+            {
+              "type": "text",
+              "text": "What is 2 + 2? Reply with one word."
+            }
+          ]
         },
         {
           "role": "assistant",
-          "text": "four"
+          "parts": [
+            {
+              "type": "text",
+              "text": "four"
+            }
+          ]
         },
         {
           "role": "user",
-          "text": "Repeat your previous answer in uppercase. Reply with one word."
+          "parts": [
+            {
+              "type": "text",
+              "text": "Repeat your previous answer in uppercase. Reply with one word."
+            }
+          ]
         }
       ]
     },
@@ -716,33 +791,34 @@
       "messages": [
         {
           "role": "user",
-          "text": "What is 2 + 2? Use the calculator tool, then answer in one word."
+          "parts": [
+            {
+              "type": "text",
+              "text": "What is 2 + 2? Use the calculator tool, then answer in one word."
+            }
+          ]
         },
         {
           "role": "assistant",
           "parts": [
             {
-              "functionCall": {
-                "id": "call_calc_2_plus_2",
-                "name": "calculator",
-                "args": {
-                  "expression": "2 + 2"
-                }
+              "type": "tool_call",
+              "id": "call_calc_2_plus_2",
+              "name": "calculator",
+              "arguments": {
+                "expression": "2 + 2"
               }
             }
           ]
         },
         {
-          "role": "user",
+          "role": "tool",
           "parts": [
             {
-              "functionResponse": {
-                "id": "call_calc_2_plus_2",
-                "name": "calculator",
-                "response": {
-                  "result": "4"
-                }
-              }
+              "type": "tool_result",
+              "id": "call_calc_2_plus_2",
+              "content": "4",
+              "name": "calculator"
             }
           ]
         }

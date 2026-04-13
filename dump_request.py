@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Dump the HTTP request for a given test case as JSON."""
+"""Dump the HTTP request for a given test case as JSON.
+
+Uses the canonical lm15 message format for the 'messages' field.
+"""
 
 import json
 import sys
@@ -7,58 +10,7 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "lm15-python"))
 
-from lm15.curl import dump_http
-from lm15.types import FunctionTool, Message, Part
-
-
-def build_messages(case):
-    """Build lm15 Message objects from test case messages array."""
-    msgs = []
-    for m in case["messages"]:
-        role = m["role"]
-        content = m.get("content")
-
-        # OpenAI-style function_call / function_call_output items
-        if m.get("type") == "function_call":
-            # These are provider-specific items that get passed through raw
-            # We can't build them from lm15 messages — they'll be in provider passthrough
-            continue
-        if m.get("type") == "function_call_output":
-            continue
-
-        if isinstance(content, str):
-            if role == "user":
-                msgs.append(Message.user(content))
-            elif role == "assistant":
-                msgs.append(Message.assistant(content))
-        elif isinstance(content, list):
-            parts = []
-            for c in content:
-                if isinstance(c, str):
-                    parts.append(Part.text_part(c))
-                elif c.get("type") in ("text", "input_text"):
-                    parts.append(Part.text_part(c["text"]))
-                elif c.get("type") in ("image", "input_image"):
-                    # Image URL
-                    url = None
-                    if "image_url" in c:
-                        url = c["image_url"]
-                    elif "source" in c and c["source"].get("type") == "url":
-                        url = c["source"]["url"]
-                    if url:
-                        parts.append(Part.image_url_part(url))
-                elif c.get("type") == "tool_use":
-                    parts.append(Part(type="tool_call", tool_call_id=c["id"],
-                                      tool_name=c["name"],
-                                      tool_args=c.get("input", {})))
-                elif c.get("type") == "tool_result":
-                    parts.append(Part(type="tool_result", tool_call_id=c["tool_use_id"],
-                                      text=json.dumps(c.get("content", ""))))
-            msgs.append(Message(role=role, parts=tuple(parts)))
-        elif content is None and role == "assistant":
-            # Assistant with tool_use blocks (anthropic multi-turn)
-            msgs.append(Message.assistant(""))
-    return msgs
+from lm15.types import FunctionTool, messages_from_json
 
 
 def main():
@@ -95,33 +47,22 @@ def main():
             for t in case["tools"]
         ]
 
-    # Provider passthrough for fields not natively abstracted
-    if case.get("provider"):
-        # _build_lm_request doesn't expose provider kwarg directly,
-        # but we can monkey-patch it through
-        kwargs["_provider_passthrough"] = case["provider"]
-
     # Determine prompt vs messages
     prompt = case.get("prompt")
-    messages = case.get("messages")
-
-    if messages:
-        kwargs["messages"] = build_messages(case)
+    if case.get("messages"):
+        kwargs["messages"] = messages_from_json(case["messages"])
         prompt = None
 
-    # Build the request
-    # We need to handle provider passthrough specially
-    provider_passthrough = kwargs.pop("_provider_passthrough", None)
+    # Provider passthrough
+    provider_passthrough = case.get("provider")
 
     if provider_passthrough:
-        # We need to go lower-level to inject provider config
-        from lm15.curl import _build_lm_request, build_http_request, http_request_to_dict
-        from lm15.types import Config
+        from lm15.curl import _build_lm_request, http_request_to_dict, resolve_provider
+        from lm15.factory import build_default
+        from lm15.types import Config, LMRequest
 
-        # Build LMRequest first
         lm_request = _build_lm_request(model, prompt, **kwargs)
 
-        # Inject provider passthrough into config
         existing_provider = dict(lm_request.config.provider or {})
         existing_provider.update(provider_passthrough)
         new_config = Config(
@@ -136,8 +77,7 @@ def main():
             provider=existing_provider or None,
         )
 
-        from lm15.types import LMRequest as LMReq
-        lm_request = LMReq(
+        lm_request = LMRequest(
             model=lm_request.model,
             messages=lm_request.messages,
             system=lm_request.system,
@@ -145,9 +85,6 @@ def main():
             config=new_config,
         )
 
-        # Build HTTP request from LMRequest
-        from lm15.curl import resolve_provider
-        from lm15.factory import build_default
         resolved_provider = resolve_provider(model)
         client = build_default(api_key="test-key", provider_hint=resolved_provider)
         adapter = client.adapters.get(resolved_provider)
@@ -155,6 +92,7 @@ def main():
         http_req = adapter.build_request(lm_request, stream=stream)
         result = http_request_to_dict(http_req)
     else:
+        from lm15.curl import dump_http
         result = dump_http(model, prompt, api_key="test-key", **kwargs)
 
     # Redact auth
