@@ -847,7 +847,7 @@
       "prompt": "Write one short slogan about science.",
       "provider": {
         "generationConfig": {
-          "temperature": 1.0,
+          "temperature": 1,
           "topP": 0.8
         }
       }
