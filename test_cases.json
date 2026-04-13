@@ -1,0 +1,111 @@
+{
+  "description": "Cross-SDK curl test cases. Each case defines a logical lm15 call. All three SDKs should produce identical HTTP requests (modulo auth headers).",
+  "cases": [
+    {
+      "id": "openai.basic_text",
+      "model": "gpt-4.1-mini",
+      "prompt": "Say hello."
+    },
+    {
+      "id": "openai.with_system",
+      "model": "gpt-4.1-mini",
+      "prompt": "Summarize DNA.",
+      "system": "You are terse."
+    },
+    {
+      "id": "openai.with_temperature",
+      "model": "gpt-4.1-mini",
+      "prompt": "Write a haiku.",
+      "temperature": 0.7,
+      "max_tokens": 50
+    },
+    {
+      "id": "openai.with_tools",
+      "model": "gpt-4.1-mini",
+      "prompt": "What is the weather in Montreal?",
+      "tools": [
+        {
+          "name": "get_weather",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "city": {"type": "string"}
+            },
+            "required": ["city"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "openai.streaming",
+      "model": "gpt-4.1-mini",
+      "prompt": "Hello.",
+      "stream": true
+    },
+    {
+      "id": "anthropic.basic_text",
+      "model": "claude-sonnet-4-5",
+      "prompt": "Say hello."
+    },
+    {
+      "id": "anthropic.with_system",
+      "model": "claude-sonnet-4-5",
+      "prompt": "Summarize DNA.",
+      "system": "You are terse."
+    },
+    {
+      "id": "anthropic.with_tools",
+      "model": "claude-sonnet-4-5",
+      "prompt": "What is the weather in Montreal?",
+      "tools": [
+        {
+          "name": "get_weather",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "city": {"type": "string"}
+            },
+            "required": ["city"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "gemini.basic_text",
+      "model": "gemini-2.5-flash",
+      "prompt": "Say hello."
+    },
+    {
+      "id": "gemini.with_system",
+      "model": "gemini-2.5-flash",
+      "prompt": "Summarize DNA.",
+      "system": "You are terse."
+    },
+    {
+      "id": "gemini.with_tools",
+      "model": "gemini-2.5-flash",
+      "prompt": "What is the weather in Montreal?",
+      "tools": [
+        {
+          "name": "get_weather",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "city": {"type": "string"}
+            },
+            "required": ["city"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "gemini.streaming",
+      "model": "gemini-2.5-flash",
+      "prompt": "Hello.",
+      "stream": true
+    }
+  ]
+}
