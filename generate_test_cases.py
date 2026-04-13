@@ -54,7 +54,9 @@ def openai_input_to_canonical(inp: list) -> list[dict]:
                         parts.append({"type": "text", "text": c["text"]})
                     elif ct == "input_image":
                         part = {"type": "image", "source": {}}
-                        if "image_url" in c:
+                        if c.get("file_id"):
+                            part["source"] = {"type": "file", "file_id": c["file_id"]}
+                        elif "image_url" in c:
                             url = c["image_url"]
                             if url.startswith("data:"):
                                 # data URI → base64

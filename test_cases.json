@@ -72,6 +72,30 @@
       ]
     },
     {
+      "id": "openai.image_file",
+      "model": "gpt-4.1-mini",
+      "messages": [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "type": "text",
+              "text": "Describe this image in a few words."
+            },
+            {
+              "type": "image",
+              "source": {
+                "type": "url",
+                "url": "https://raw.githubusercontent.com/github/explore/main/topics/react/react.png",
+                "media_type": "image/png",
+                "detail": "low"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "openai.file_input",
       "model": "gpt-4.1-mini",
       "messages": [
