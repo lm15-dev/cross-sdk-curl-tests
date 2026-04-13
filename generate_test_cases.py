@@ -66,6 +66,32 @@ def openai_input_to_canonical(inp: list) -> list[dict]:
                         if c.get("detail"):
                             part["source"]["detail"] = c["detail"]
                         parts.append(part)
+                    elif ct == "input_audio":
+                        part: dict = {"type": "audio", "source": {}}
+                        if c.get("audio_url"):
+                            part["source"] = {"type": "url", "url": c["audio_url"], "media_type": "audio/wav"}
+                        elif c.get("audio"):
+                            fmt = c.get("format", "wav")
+                            part["source"] = {"type": "base64", "data": c["audio"], "media_type": f"audio/{fmt}"}
+                        parts.append(part)
+                    elif ct == "input_file":
+                        part = {"type": "document", "source": {}}
+                        if c.get("file_data") and c["file_data"].startswith("data:"):
+                            header, data = c["file_data"].split(",", 1)
+                            media_type = header.split(":")[1].split(";")[0]
+                            part["source"] = {"type": "base64", "data": data, "media_type": media_type}
+                        elif c.get("file_url"):
+                            part["source"] = {"type": "url", "url": c["file_url"], "media_type": "application/octet-stream"}
+                        parts.append(part)
+                    elif ct == "input_video":
+                        part = {"type": "video", "source": {}}
+                        if c.get("video_url"):
+                            part["source"] = {"type": "url", "url": c["video_url"], "media_type": "video/mp4"}
+                        elif c.get("video_data") and c["video_data"].startswith("data:"):
+                            header, data = c["video_data"].split(",", 1)
+                            media_type = header.split(":")[1].split(";")[0]
+                            part["source"] = {"type": "base64", "data": data, "media_type": media_type}
+                        parts.append(part)
                     else:
                         parts.append({"type": "text", "text": json.dumps(c)})
                 messages.append({"role": role, "parts": parts})
@@ -154,6 +180,17 @@ def anthropic_messages_to_canonical(msgs: list) -> list[dict]:
                     if src.get("data"):
                         part["source"]["data"] = src["data"]
                     parts.append(part)
+                elif ct == "document":
+                    src = c.get("source", {})
+                    part = {"type": "document", "source": {
+                        "type": src.get("type", "base64"),
+                        "media_type": src.get("media_type", "application/pdf"),
+                    }}
+                    if src.get("url"):
+                        part["source"]["url"] = src["url"]
+                    if src.get("data"):
+                        part["source"]["data"] = src["data"]
+                    parts.append(part)
                 elif ct == "tool_use":
                     parts.append({
                         "type": "tool_call",
@@ -224,10 +261,36 @@ def gemini_contents_to_canonical(contents: list) -> list[dict]:
                 parts.append({"type": "text", "text": p["text"]})
             elif "inlineData" in p or "inline_data" in p:
                 d = p.get("inlineData") or p["inline_data"]
-                parts.append({"type": "image", "source": {
+                mime = d.get("mimeType") or d.get("mime_type") or "image/png"
+                if mime.startswith("image/"):
+                    ptype = "image"
+                elif mime.startswith("audio/"):
+                    ptype = "audio"
+                elif mime.startswith("video/"):
+                    ptype = "video"
+                else:
+                    ptype = "document"
+                parts.append({"type": ptype, "source": {
                     "type": "base64",
                     "data": d["data"],
-                    "media_type": d.get("mime_type", "image/png"),
+                    "media_type": mime,
+                }})
+            elif "fileData" in p or "file_data" in p:
+                d = p.get("fileData") or p["file_data"]
+                mime = d.get("mimeType") or d.get("mime_type") or "application/octet-stream"
+                uri = d.get("fileUri") or d.get("file_uri") or ""
+                if mime.startswith("image/"):
+                    ptype = "image"
+                elif mime.startswith("audio/"):
+                    ptype = "audio"
+                elif mime.startswith("video/"):
+                    ptype = "video"
+                else:
+                    ptype = "document"
+                parts.append({"type": ptype, "source": {
+                    "type": "url",
+                    "url": uri,
+                    "media_type": mime,
                 }})
             elif "functionCall" in p:
                 fc = p["functionCall"]
