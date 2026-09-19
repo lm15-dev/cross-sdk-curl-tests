@@ -64,8 +64,10 @@ def openai_input_to_canonical(inp: list) -> list[dict]:
                 parts = []
                 for c in content:
                     ct = c.get("type", "")
-                    if ct in ("input_text", "text"):
+                    if ct in ("input_text", "output_text", "text"):
                         parts.append({"type": "text", "text": c["text"]})
+                    elif ct == "refusal":
+                        parts.append({"type": "refusal", "text": c.get("refusal", c.get("text", ""))})
                     elif ct == "input_image":
                         part = {"type": "image", "source": {}}
                         if c.get("file_id"):

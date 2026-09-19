@@ -182,7 +182,7 @@ print(json.dumps(cases[$i]))
         echo "  curl command (from Python):"
         python3 -c "
 import sys, os, json
-sys.path.insert(0, os.path.join('$ROOT', 'lm15-python'))
+sys.path.insert(0, os.path.join('$ROOT', 'lm15-python2'))
 from lm15.curl import dump_curl
 case = json.loads('$CASE_JSON')
 kwargs = {}
@@ -203,7 +203,7 @@ print(dump_curl(case['model'], case['prompt'], env=os.environ.get('LM15_ENV', '.
         echo "  Running curl..."
         python3 -c "
 import sys, os, json
-sys.path.insert(0, os.path.join('$ROOT', 'lm15-python'))
+sys.path.insert(0, os.path.join('$ROOT', 'lm15-python2'))
 from lm15.curl import dump_curl
 case = json.loads('$CASE_JSON')
 kwargs = {}

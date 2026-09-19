@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
-"""Dump the HTTP request for a given test case as JSON.
-
-Uses the canonical lm15 message format for the 'messages' field.
-"""
-
 import json
 import sys
 import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "lm15-python"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "lm15-python2"))
 
-from lm15.types import BuiltinTool, FunctionTool, messages_from_json
-
+from lm15.types import BuiltinTool, FunctionTool, Request, Config, Message
+from lm15.serde import messages_from_json
 
 def main():
     if len(sys.argv) < 2:
@@ -20,22 +15,39 @@ def main():
 
     case = json.loads(sys.argv[1])
     model = case["model"]
+    
+    # Infer provider from model or ID
+    provider_name = case["id"].split(".")[0]
+
+    if provider_name == "openai":
+        from lm15.providers.openai import OpenAILM
+        lm = OpenAILM(api_key="test-key")
+    elif provider_name == "anthropic":
+        from lm15.providers.anthropic import AnthropicLM
+        lm = AnthropicLM(api_key="test-key")
+    elif provider_name == "gemini":
+        from lm15.providers.gemini import GeminiLM
+        lm = GeminiLM(api_key="test-key")
+    else:
+        raise ValueError(f"Unknown provider: {provider_name}")
+
     kwargs = {}
+    config_kwargs = {}
 
     if "system" in case:
         kwargs["system"] = case["system"]
+        
     if "temperature" in case:
-        kwargs["temperature"] = case["temperature"]
+        config_kwargs["temperature"] = case["temperature"]
     if "max_tokens" in case:
-        kwargs["max_tokens"] = case["max_tokens"]
+        config_kwargs["max_tokens"] = case["max_tokens"]
     if "top_p" in case:
-        kwargs["top_p"] = case["top_p"]
+        config_kwargs["top_p"] = case["top_p"]
     if "stop" in case:
-        kwargs["stop"] = case["stop"]
-    if "stream" in case:
-        kwargs["stream"] = case["stream"]
+        config_kwargs["stop"] = case["stop"]
     if case.get("reasoning"):
-        kwargs["reasoning"] = case["reasoning"]
+        from lm15.serde import reasoning_from_dict
+        config_kwargs["reasoning"] = reasoning_from_dict(case["reasoning"])
 
     if case.get("tools"):
         kwargs["tools"] = [
@@ -49,69 +61,101 @@ def main():
 
     if case.get("builtin_tools"):
         builtin = [
-            BuiltinTool(name=t["name"], builtin_config=t.get("builtin_config"))
+            BuiltinTool(name=t["name"], config=t.get("builtin_config"))
             for t in case["builtin_tools"]
         ]
         kwargs.setdefault("tools", [])
         kwargs["tools"].extend(builtin)
 
-    # Determine prompt vs messages
     prompt = case.get("prompt")
     if case.get("messages"):
-        kwargs["messages"] = messages_from_json(case["messages"])
+        raw_msgs = case["messages"]
+        for m in raw_msgs:
+            for p in m.get("parts", []):
+                if "source" in p:
+                    src = p.pop("source")
+                    src.pop("type", None)
+                    p.update(src)
+                if "arguments" in p:
+                    p["input"] = p.pop("arguments")
+        kwargs["messages"] = messages_from_json(raw_msgs)
         prompt = None
+    elif prompt is not None:
+        kwargs["messages"] = [Message.user(prompt)]
 
     # Provider passthrough
     provider_passthrough = case.get("provider")
 
     if provider_passthrough:
-        from lm15.curl import _build_lm_request, http_request_to_dict, resolve_provider
-        from lm15.factory import build_default
-        from lm15.types import Config, LMRequest
+        if "tool_choice" in provider_passthrough:
+            tc_raw = provider_passthrough["tool_choice"]
+            if isinstance(tc_raw, str):
+                tc_dict = {"mode": tc_raw}
+            elif isinstance(tc_raw, dict):
+                tc_dict = {"mode": tc_raw.get("type", "auto")}
+                if tc_dict["mode"] in ("tool", "function"):
+                    tc_dict["mode"] = "required"
+                    tc_dict["allowed"] = [tc_raw["name"]]
+                elif tc_dict["mode"] == "any":
+                    tc_dict["mode"] = "required"
+                if "disable_parallel_tool_use" in tc_raw:
+                    tc_dict["parallel"] = not tc_raw["disable_parallel_tool_use"]
+            from lm15.serde import tool_choice_from_dict
+            config_kwargs["tool_choice"] = tool_choice_from_dict(tc_dict)
+            
+        # other passthrough fields might be response_format, reasoning etc.
+        if "response_format" in provider_passthrough:
+            config_kwargs["response_format"] = provider_passthrough["response_format"]
+        
+        # Everything else in provider passthrough is extensions
+        extensions = {k: v for k, v in provider_passthrough.items() if k not in ["tool_choice", "response_format"]}
+        if extensions:
+            config_kwargs["extensions"] = extensions
 
-        lm_request = _build_lm_request(model, prompt, **kwargs)
+    stream = case.get("stream", False)
 
-        existing_provider = dict(lm_request.config.provider or {})
-        existing_provider.update(provider_passthrough)
-        new_config = Config(
-            max_tokens=lm_request.config.max_tokens,
-            temperature=lm_request.config.temperature,
-            top_p=lm_request.config.top_p,
-            top_k=lm_request.config.top_k,
-            stop=lm_request.config.stop,
-            response_format=lm_request.config.response_format,
-            tool_config=lm_request.config.tool_config,
-            reasoning=lm_request.config.reasoning,
-            provider=existing_provider or None,
-        )
+    req = Request(
+        model=model,
+        messages=tuple(kwargs["messages"]),
+        system=kwargs.get("system"),
+        tools=tuple(kwargs.get("tools", [])),
+        config=Config(**config_kwargs)
+    )
 
-        lm_request = LMRequest(
-            model=lm_request.model,
-            messages=lm_request.messages,
-            system=lm_request.system,
-            tools=lm_request.tools,
-            config=new_config,
-        )
+    transport_req = lm.build_request(req, stream=stream)
 
-        resolved_provider = resolve_provider(model)
-        client = build_default(api_key="test-key", provider_hint=resolved_provider)
-        adapter = client.adapters.get(resolved_provider)
-        stream = case.get("stream", False)
-        http_req = adapter.build_request(lm_request, stream=stream)
-        result = http_request_to_dict(http_req)
+    # Redact auth in headers
+    headers = {}
+    for k, v in transport_req.headers:
+        kl = k.lower()
+        if kl in ("authorization", "x-api-key", "x-goog-api-key"):
+            headers[k] = "REDACTED"
+        else:
+            headers[k] = v
+
+    # Reconstruct result
+    result = {
+        "method": transport_req.method,
+        "url": transport_req.url,
+        "headers": headers,
+    }
+    
+    if transport_req.body:
+        try:
+            result["body"] = json.loads(transport_req.body.decode("utf-8"))
+        except Exception:
+            result["body"] = transport_req.body.decode("utf-8")
+            
+    if "?" in transport_req.url:
+        import urllib.parse
+        parsed = urllib.parse.urlparse(transport_req.url)
+        params = dict(urllib.parse.parse_qsl(parsed.query))
+        result["params"] = params
+        result["url"] = urllib.parse.urlunparse((parsed.scheme, parsed.netloc, parsed.path, "", "", ""))
     else:
-        from lm15.curl import dump_http
-        result = dump_http(model, prompt, api_key="test-key", **kwargs)
-
-    # Redact auth
-    if "headers" in result:
-        for k in list(result["headers"]):
-            kl = k.lower()
-            if kl in ("authorization", "x-api-key", "x-goog-api-key"):
-                result["headers"][k] = "REDACTED"
+        result["params"] = None
 
     print(json.dumps(result, indent=2, sort_keys=True))
-
 
 if __name__ == "__main__":
     main()
